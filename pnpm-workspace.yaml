@@ -1,8 +1,5 @@
 packages:
   - "packages/*"
 allowBuilds:
-  '@google/genai': set this to true or false
-  protobufjs: set this to true or false
-neverBuiltDependencies:
-  - "@google/genai"
-  - "protobufjs"
+  "@google/genai": true
+  protobufjs: true
