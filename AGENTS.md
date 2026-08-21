@@ -1,31 +1,34 @@
 # AGENTS.md
 
-> pi 扩展集合的代理指南。代码细节以源码为准。
+> pi 扩展集合(pnpm workspace monorepo)的代理指南。代码细节以源码为准。
 
 ## Project
 
-个人维护的 [pi](https://github.com/badlogic/pi-mono) 扩展集合(**单包多扩展**):一个 npm 包装多个扩展,靠 `package.json` 的 `pi.extensions` 数组声明入口。当前仅含 `proactive-compact`(主动上下文压缩)。[推断] 定位为按需扩充的个人扩展库,非独立产品。
+个人维护的 [pi](https://github.com/badlogic/pi-mono) 扩展集合,以 **pnpm workspace monorepo** 组织:每个扩展是独立 npm 包(可独立安装),但**共享一个版本号**。[推断] 定位为按需扩充的个人扩展库,非独立产品。
 
 ## Stack
 
-- 语言/运行时: TypeScript(**裸 TS,无构建步骤**;pi 用 bun 直接加载 `.ts`)
+- 语言/运行时: TypeScript(裸 TS,无构建步骤;pi 用 bun 直接加载 `.ts`)
 - 扩展 API: `@earendil-works/pi-coding-agent`(peerDependency,由 pi 运行时提供)
 - 运行时依赖: `typebox`(工具参数 schema)
-- 包管理器: pnpm(技术栈约束)
-- 分发: npm(作用域 `@earthchen/pi-extensions`)/ git(`pi install`)
+- 包管理器: pnpm + workspace
+- 分发: 每扩展独立 npm 包(`@earthchen/pi-ext-<name>`)/ git(`pi install`)
 
 ## Commands
 
-- 发布: `pnpm publish`(包根执行;无构建,直接打包 `files` 白名单)
+- 安装 workspace: `pnpm install`
+- 同步共享版本: `node scripts/sync-version.mjs`(根 `version` → `packages/*/package.json`)
+- 发布全部: `pnpm -r publish`(需先提交;pi 要求干净工作树)
+- 发布单个: `pnpm --filter @earthchen/pi-ext-<name> publish`
 - [缺] 无 build / test / lint 脚本(裸 TS,经 pi 运行时校验)
+- [注] `pnpm run version:sync` 在部分 pnpm 版本会因依赖构建检查失败,直接用 `node` 命令绕过。
 
 ## Architecture
 
-- `package.json` 的 `pi.extensions` 数组 = 扩展清单,每项指向一个默认导出的入口文件。
-- `extensions/<name>.ts`:扩展源码,`export default function(api: ExtensionAPI)` 在函数体内用 `pi.on` / `pi.registerTool` 注册。
-- `extensions/<name>/README.md`:该扩展的独立文档。
-- 新增扩展:加 `extensions/<name>.ts` + `extensions/<name>/README.md`,并在 `pi.extensions` 追加 `"./extensions/<name>.ts"`。
-- 扩展配置(若有)走 pi 的 `settings.json`(`~/.pi/agent/settings.json` 或项目级 `.pi/settings.json`)中的 `<name>` 块,**不进包体**。
+- 仓库根 `package.json`(`private: true`)持有**共享版本号**这一单一事实源;`pnpm-workspace.yaml` 声明 `packages/*`。
+- `scripts/sync-version.mjs`:把根 `version` 同步进每个 `packages/<name>/package.json`,强制多包同版本。
+- 每个扩展 = `packages/<name>/`:独立 `package.json`(name `@earthchen/pi-ext-<name>`)、`<name>.ts`(默认导出 `ExtensionAPI` 注册函数)、`README.md`、`LICENSE`。
+- 每包的 `pi.extensions: ["./<name>.ts"]` 是该扩展的安装入口;装 `npm:@earthchen/pi-ext-<name>` 只装这一个。
 
 ## Conventions
 
@@ -33,12 +36,13 @@
 - 注释与标识符用英文;对外说明/文档用中文(pi 项目惯例)。
 - 入口统一 `export default function` 接收 `ExtensionAPI`,注册逻辑写在函数体内。
 - 无构建步骤,源码即发布物;保持 `.ts` 可被 pi 的 bun 直接加载。
-- 单扩展单目录(`extensions/<name>/` 放 README),与入口文件同基名。
+- 包名 `@earthchen/pi-ext-<name>`;版本由根同步,**不要**手动改各包 `version`。
 - `typebox` 版本锁死(当前 `1.3.8`,取自用环境);发布前确认公网可解析。
 
 ## Rules
 
-- 扩展以 pi 包分发,**必须**在 `package.json` 声明 `pi.extensions` 入口;漏写则不被加载。
-- 安装 npm 包后,删掉 `~/.pi/agent/extensions/` 下的本地同名副本,避免同一扩展被加载两次(`extensions/` 自动扫描 + npm 包加载会双加载)。[来源: extensions/proactive-compact/README.md]
+- 加扩展必须新建 `packages/<name>/` 并跑 `pnpm version:sync`,保证版本与根一致;漏同步会导致发版版本错乱。
+- 扩展以 pi 包分发,每包 `package.json` **必须**声明 `pi.extensions` 入口;漏写则不被加载。
+- 安装某扩展后,删掉 `~/.pi/agent/extensions/` 下的本地同名副本,避免同一扩展被加载两次。[来源: packages/proactive-compact/README.md]
 - 扩展在 pi 中拥有完整系统权限;装第三方/他人扩展前先审源码(同 pi 包安全模型)。
 - [推断] 提交信息沿用 `type(范围): 中文简述`(参考作者其他仓库);未强制,可改。

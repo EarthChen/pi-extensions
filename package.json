@@ -1,32 +1,7 @@
 {
-  "name": "@earthchen/pi-extensions",
+  "name": "pi-extensions",
   "version": "0.1.0",
-  "description": "A collection of pi agent extensions (proactive context compaction and more).",
-  "main": null,
-  "types": null,
-  "files": [
-    "extensions/",
-    "LICENSE",
-    "README.md"
-  ],
-  "keywords": [
-    "pi",
-    "pi-agent",
-    "pi-package",
-    "extension",
-    "compaction",
-    "context"
-  ],
-  "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*"
-  },
-  "dependencies": {
-    "typebox": "1.3.8"
-  },
-  "pi": {
-    "extensions": [
-      "./extensions/proactive-compact.ts"
-    ]
-  },
+  "private": true,
+  "description": "Monorepo of pi agent extensions by EarthChen — shared version, independently installable.",
   "license": "MIT"
 }

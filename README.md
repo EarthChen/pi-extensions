@@ -1,33 +1,36 @@
 # pi-extensions
 
-A collection of [pi](https://github.com/badlogic/pi-mono) agent extensions by EarthChen.
+[EarthChen](https://github.com/EarthChen) 的 [pi](https://github.com/badlogic/pi-mono) 扩展集合。**pnpm workspace monorepo**:每个扩展是独立 npm 包(可独立安装),但**共享同一个版本号**。
 
-Each extension lives under `extensions/<name>/` with its own `README.md`. New extensions
-are added by dropping a `extensions/<name>.ts` file and appending its path to the
-`pi.extensions` array in `package.json`.
+## 扩展
 
-## Extensions
+| 扩展 | 安装命令 | 文档 |
+|------|----------|------|
+| `proactive-compact` | `pi install npm:@earthchen/pi-ext-proactive-compact` | [packages/proactive-compact/README.md](packages/proactive-compact/README.md) |
 
-| Extension | Description |
-|-----------|-------------|
-| `proactive-compact` | Agent-judged + occupancy-threshold proactive context compaction. See [extensions/proactive-compact/README.md](extensions/proactive-compact/README.md). |
-
-## Install
+## 安装某个扩展
 
 ```bash
-pi install npm:@earthchen/pi-extensions
-# or, from this repo:
-pi install git:github.com/EarthChen/pi-extensions
+pi install npm:@earthchen/pi-ext-proactive-compact
 ```
 
-pi auto-loads extensions from `~/.pi/agent/npm/`; restart pi (or `/reload`) to apply.
+pi 自动加载 `~/.pi/agent/npm/` 下的扩展,重启(或 `/reload`)生效。每个扩展独立安装、独立启用,互不影响。
 
-> If you previously kept a local copy at `~/.pi/agent/extensions/proactive-compact.ts`,
-> delete it after installing this package to avoid the extension being loaded twice.
+## 新增扩展
 
-## Adding another extension
+1. 建 `packages/<name>/`,含 `package.json`(name `@earthchen/pi-ext-<name>`、入口 `pi.extensions: ["./<name>.ts"]`)、`<name>.ts`(默认导出 `ExtensionAPI` 注册函数)、`README.md`、`LICENSE`。
+2. 跑 `node scripts/sync-version.mjs` 把根版本号同步进该包。
+3. `pnpm -r publish`(见下)发布。
 
-1. Create `extensions/<name>.ts` (default-export an `ExtensionAPI` registration function).
-2. Create `extensions/<name>/README.md`.
-3. Append `"./extensions/<name>.ts"` to `pi.extensions` in `package.json`.
-4. Bump `version` and `pnpm publish`.
+## 发布(共享版本)
+
+版本号单一事实源在仓库根 `package.json` 的 `version`。
+
+```bash
+pnpm install                     # 解析 workspace
+node scripts/sync-version.mjs   # 根 version → packages/*/package.json(共享版本同步)
+pnpm -r publish                 # 发布所有扩展(同版本);pi 要求先提交(干净工作树)
+```
+
+> [注] `pnpm run version:sync` 在部分 pnpm 版本会因依赖构建状态检查(`ERR_PNPM_IGNORED_BUILDS`)失败;直接用上面的 `node` 命令即可绕过。
+> npm 不允许重发同一版本;每次 bump 根版本后,所有扩展一起以新版本发布。若只想发某个扩展:`pnpm --filter @earthchen/pi-ext-<name> publish`(需先同步版本)。

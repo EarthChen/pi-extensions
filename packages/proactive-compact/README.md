@@ -23,16 +23,16 @@ pi 原生自动压缩只在 `contextTokens > contextWindow - reserveTokens`(阈�
 npm 包(推荐):
 
 ```bash
-pi install npm:@earthchen/pi-extensions
-# 或 git 安装:
-pi install git:github.com/EarthChen/pi-extensions
+pi install npm:@earthchen/pi-ext-proactive-compact
+# 或本地路径安装(克隆仓库后):
+pi install ./packages/proactive-compact
 ```
 
 pi 自动加载 `~/.pi/agent/npm/` 下的扩展,**重启(或 `/reload`)即生效**。仅依赖 pi 内置扩展 API(`ctx.compact`、`ctx.getContextUsage`、`registerTool` 等),无额外依赖。无配置块时数值通道按默认 `ratio: 0.6` 工作。
 
 若此前在 `~/.pi/agent/extensions/proactive-compact.ts` 放过本地副本,安装 npm 包后请删除旧副本,避免同一扩展被加载两次。
 
-本地开发(不发布):把本仓库 `extensions/proactive-compact.ts` 与 `extensions/proactive-compact/` 放到 `~/.pi/agent/extensions/` 下即可。
+本地开发(不发布):把本仓库 `packages/proactive-compact/proactive-compact.ts` 与 `packages/proactive-compact/README.md` 放到 `~/.pi/agent/extensions/` 下即可。
 
 ## 触发条件
 
