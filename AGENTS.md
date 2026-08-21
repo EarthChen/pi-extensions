@@ -20,6 +20,7 @@
 - 同步共享版本: `node scripts/sync-version.mjs`(根 `version` → `packages/*/package.json`)
 - 发布全部: `pnpm -r publish`(需先提交;pi 要求干净工作树)
 - 发布单个: `pnpm --filter @earthchen/pi-<name> publish`
+- 自动发版:在 `main` 打 `vX.Y.Z` tag 并推送即发布到 npm;流程与前置条件见 [RELEASING.md](./RELEASING.md)。
 - [缺] 无 build / test / lint 脚本(裸 TS,经 pi 运行时校验)
 - [注] `pnpm run version:sync` 在部分 pnpm 版本会因依赖构建检查失败,直接用 `node` 命令绕过。
 
@@ -33,6 +34,7 @@
 ## Conventions
 
 [推断] 自代码观察:
+
 - 注释与标识符用英文;对外说明/文档用中文(pi 项目惯例)。
 - 入口统一 `export default function` 接收 `ExtensionAPI`,注册逻辑写在函数体内。
 - 无构建步骤,源码即发布物;保持 `.ts` 可被 pi 的 bun 直接加载。
@@ -46,3 +48,4 @@
 - 安装某扩展后,删掉 `~/.pi/agent/extensions/` 下的本地同名副本,避免同一扩展被加载两次。[来源: packages/proactive-compact/README.md]
 - 扩展在 pi 中拥有完整系统权限;装第三方/他人扩展前先审源码(同 pi 包安全模型)。
 - [推断] 提交信息沿用 `type(范围): 中文简述`(参考作者其他仓库);未强制,可改。
+- 发版统一走 tag 触发的 CI(`.github/workflows/release.yml`):在 `main` 打并推送 `vX.Y.Z` tag 即发布;流程与前置条件见 [RELEASING.md](./RELEASING.md)。手工 `pnpm -r publish` 仅本地兜底,CI 才是正式发版路径。

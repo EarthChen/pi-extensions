@@ -23,6 +23,8 @@ pi 自动加载 `~/.pi/agent/npm/` 下的扩展,重启(或 `/reload`)生效。�
 3. `pnpm -r publish`(见下)发布。
 
 ## 发布(共享版本)
+>
+> 自动发版(打 tag 触发 CI)的完整流程与前置条件见 [RELEASING.md](./RELEASING.md);下方为本地手动兜底命令。
 
 版本号单一事实源在仓库根 `package.json` 的 `version`。
 

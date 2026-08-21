@@ -1,0 +1,72 @@
+name: publish
+
+# Publish every extension to npm when a version tag is pushed.
+# Trigger: `git push origin vX.Y.Z` (tag must be `v*` and sit on main).
+on:
+  push:
+    tags:
+      - "v*"
+
+# Least privilege: publishing only needs the npm token (NODE_AUTH_TOKEN),
+# not write access to the GitHub repo.
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history so we can resolve origin/main for the branch guard.
+          fetch-depth: 0
+
+      # A git tag is not bound to a branch. Enforce "tag is on main" by
+      # checking the tagged commit is an ancestor of origin/main.
+      - name: Ensure tag is on main
+        run: |
+          git fetch origin main
+          TAG_COMMIT="$(git rev-parse "${GITHUB_REF_NAME}^{commit}")"
+          MAIN_COMMIT="$(git rev-parse origin/main)"
+          if ! git merge-base --is-ancestor "$TAG_COMMIT" "$MAIN_COMMIT"; then
+            echo "::error::Tag ${GITHUB_REF_NAME} is not on origin/main. Aborting publish."
+            exit 1
+          fi
+
+      # Tag must match the single source of truth (root package.json version),
+      # otherwise we would publish the wrong version.
+      - name: Verify tag matches root version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} (v$VERSION) does not match root package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
+      # Lockfile does not record workspace package versions, so version bumps
+      # never invalidate it — frozen-lockfile is safe here.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Sync root version into every packages/*/package.json (mutates files,
+      # so the publish step below must use --no-git-checks).
+      - name: Sync version
+        run: node scripts/sync-version.mjs
+
+      - name: Publish to npm
+        run: pnpm -r publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
