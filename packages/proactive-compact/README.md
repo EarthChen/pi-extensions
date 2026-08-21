@@ -23,7 +23,7 @@ pi 原生自动压缩只在 `contextTokens > contextWindow - reserveTokens`(阈�
 npm 包(推荐):
 
 ```bash
-pi install npm:@earthchen/pi-ext-proactive-compact
+pi install npm:@earthchen/pi-proactive-compact
 # 或本地路径安装(克隆仓库后):
 pi install ./packages/proactive-compact
 ```
