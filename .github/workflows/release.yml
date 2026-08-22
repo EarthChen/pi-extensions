@@ -7,10 +7,10 @@ on:
     tags:
       - "v*"
 
-# Least privilege: publishing only needs the npm token (NODE_AUTH_TOKEN),
-# not write access to the GitHub repo.
+# Least privilege: trusted publishing uses OIDC (id-token), no npm token needed.
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -61,12 +61,13 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # Sync root version into every packages/*/package.json (mutates files,
-      # so the publish step below must use --no-git-checks).
+      # Sync root version into every packages/*/package.json. When the tag
+      # already carries the synced version this is a no-op (tree stays clean).
       - name: Sync version
         run: node scripts/sync-version.mjs
 
-      - name: Publish to npm
-        run: pnpm -r publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Trusted publishing: npm auto-uses the OIDC token from the
+      # id-token: write permission. No NODE_AUTH_TOKEN required.
+      - name: Publish to npm (trusted publisher)
+        run: npm publish --access public --provenance
+        working-directory: packages/proactive-compact
