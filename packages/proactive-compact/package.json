@@ -4,6 +4,10 @@
   "description": "Proactive context compaction for pi: agent-judged + occupancy-threshold compaction.",
   "main": null,
   "types": null,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EarthChen/pi-extensions.git"
+  },
   "files": [
     "proactive-compact.ts",
     "README.md",
