@@ -72,8 +72,6 @@ jobs:
         run: |
           # Trusted publishing requires npm >= 11.5.1; node 22 bundles 10.x.
           npm install -g npm@latest
-          echo "node=$(node -v) npm=$(npm -v)"
-          unset NODE_AUTH_TOKEN
           printf 'registry=https://registry.npmjs.org/\n' > "$NPM_CONFIG_USERCONFIG"
           npm publish --access public --provenance
         working-directory: packages/proactive-compact

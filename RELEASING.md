@@ -6,8 +6,8 @@
 
 ## 前置条件
 
-- 仓库 `Settings → Secrets and variables → Actions` 已配置 `NPM_TOKEN`,值为具有 **publish** 权限的 npm token(`npm token create --type CI`)。缺失会导致 CI 401。
-- 发布使用的 `pnpm`/`node` 版本与本地一致(pnpm 11、Node 22,见 workflow)。
+- npm 包已配置 **Trusted Publisher**(npmjs.com 包 Settings → Trusted Publishers):GitHub Actions / `EarthChen` / `pi-extensions` / workflow 文件名 `release.yml`,Allowed actions 勾选发布权限。CI 用 GitHub OIDC 无 token 发布,**不需要任何 npm token secret**。
+- 发布步要求 npm ≥ 11.5.1(node 22 自带 10.x,不支持 OIDC 发布);workflow 已在发布前执行 `npm install -g npm@latest` 处理。
 
 ## 自动发版链路(CI 做了什么)
 
@@ -18,10 +18,11 @@
 3. **校验版本**:tag(去掉 `v` 前缀)必须等于根 `package.json` 的 `version`,否则中止——防止发错号。
 4. `pnpm install --frozen-lockfile`:lockfile 只记依赖、不记 workspace 包版本,bump 版本不会使其失效,冻结模式安全。
 5. `node scripts/sync-version.mjs`:把根版本写进每个 `packages/<name>/package.json`(会改写文件)。
-6. `pnpm -r publish --access public --no-git-checks`:
+6. 发布(在各包目录内 `npm publish --access public --provenance`,OIDC 可信发布):
+   - 认证走 GitHub OIDC(workflow 需 `id-token: write`),无 token、无 OTP;发布前会清掉环境变量与 `.npmrc` 中残留的 `NODE_AUTH_TOKEN`,防止旧 token 遮蔽 OIDC。
    - `--access public`:scoped 包(`@earthchen/*`)默认私有,必须显式公开否则 403。
-   - `--no-git-checks`:上一步改写了 package.json,工作树变脏,必须关掉 pnpm 的 git 检查,否则 publish 失败。
-   - 根包 `private: true` 会被自动跳过,只发 `packages/*` 下的非私有包。
+   - tag 时各包版本已与根一致,sync 步骤是 no-op、工作树干净,无 git 检查问题。
+   - `--provenance` 自动生成签名溯源;要求每个包 `package.json` 的 `repository.url` 指向本仓库,否则 npm 报 E422 校验失败。
 
 ## 如何切一个发布
 
