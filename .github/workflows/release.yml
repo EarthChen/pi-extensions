@@ -69,9 +69,10 @@ jobs:
       # Trusted publishing: npm auto-uses the OIDC token from the
       # id-token: write permission. No NODE_AUTH_TOKEN required.
       - name: Publish to npm (trusted publisher)
-        # setup-node sets NODE_AUTH_TOKEN from the NPM_TOKEN secret, which would
-        # shadow OIDC. Unset it so npm uses the trusted-publisher OIDC token.
+        # setup-node writes NODE_AUTH_TOKEN into .npmrc, which shadows OIDC.
+        # Replace .npmrc with a token-free config so npm uses the
+        # trusted-publisher OIDC token for publishing.
         run: |
-          unset NODE_AUTH_TOKEN
+          printf 'registry=https://registry.npmjs.org/\n' > "$NPM_CONFIG_USERCONFIG"
           npm publish --access public --provenance
         working-directory: packages/proactive-compact
