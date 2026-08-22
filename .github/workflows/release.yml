@@ -70,9 +70,9 @@ jobs:
       # id-token: write permission. No NODE_AUTH_TOKEN required.
       - name: Publish to npm (trusted publisher)
         run: |
+          # Trusted publishing requires npm >= 11.5.1; node 22 bundles 10.x.
+          npm install -g npm@latest
           echo "node=$(node -v) npm=$(npm -v)"
-          echo "OIDC_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+set}"
-          echo "OIDC_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+set}"
           unset NODE_AUTH_TOKEN
           printf 'registry=https://registry.npmjs.org/\n' > "$NPM_CONFIG_USERCONFIG"
           npm publish --access public --provenance
