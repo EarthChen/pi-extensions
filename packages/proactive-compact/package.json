@@ -1,6 +1,6 @@
 {
   "name": "@earthchen/pi-proactive-compact",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Proactive context compaction for pi: agent-judged + occupancy-threshold compaction.",
   "main": null,
   "types": null,
