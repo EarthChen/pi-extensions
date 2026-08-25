@@ -73,5 +73,7 @@ jobs:
           # Trusted publishing requires npm >= 11.5.1; node 22 bundles 10.x.
           npm install -g npm@latest
           printf 'registry=https://registry.npmjs.org/\n' > "$NPM_CONFIG_USERCONFIG"
-          npm publish --access public --provenance
-        working-directory: packages/proactive-compact
+          for dir in packages/*/; do
+            echo "Publishing ${dir}"
+            (cd "$dir" && npm publish --access public --provenance)
+          done
