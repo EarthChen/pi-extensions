@@ -1,6 +1,6 @@
 {
   "name": "@earthchen/pi-skill-hint",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Mid-line '/' triggers /skill:* command suggestions in the pi editor.",
   "main": null,
   "types": null,

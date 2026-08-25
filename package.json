@@ -1,6 +1,6 @@
 {
   "name": "pi-extensions",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": true,
   "description": "Monorepo of pi agent extensions by EarthChen — shared version, independently installable.",
   "license": "MIT"
