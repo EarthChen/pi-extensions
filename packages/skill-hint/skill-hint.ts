@@ -1,11 +1,20 @@
 // Skill hint: suggest /skill:* commands when "/" is typed mid-line (not at message start).
 //
 // pi's built-in slash menu only triggers when the message itself starts with "/".
-// This extension wraps the active autocomplete provider so a token like "/ski" typed
-// after other text pops skill suggestions; picking one inserts "/skill:<name> " which
-// executes as a normal skill command on submit (when it ends up at message start).
+// Two hooks make mid-line suggestions work:
+//
+// 1. Autocomplete provider wrapper: a token like "/ski" typed after other text pops
+//    skill suggestions (also serves the manual Tab trigger); picking one inserts
+//    "/skill:<name> " which executes as a normal skill command on submit (when it
+//    ends up at message start).
+//
+// 2. Custom editor subclass: the base Editor only auto-triggers "/" at message start
+//    (pi-tui's setAutocompleteTriggerCharacters explicitly excludes "/"), so without
+//    this hook mid-line tokens would require pressing Tab. The subclass re-checks the
+//    cursor context after every input and fires the autocomplete request while the
+//    cursor sits in a mid-line "/<query>" token.
 
-import type { ExtensionAPI, SlashCommandInfo } from "@earendil-works/pi-coding-agent";
+import { CustomEditor, type ExtensionAPI, type SlashCommandInfo } from "@earendil-works/pi-coding-agent";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -95,6 +104,25 @@ function createSkillHintProvider(
 	};
 }
 
+/**
+ * Editor that auto-triggers skill suggestions in mid-line "/<query>" contexts.
+ *
+ * SAFETY: tryTriggerAutocomplete() is declared private in pi-tui's .d.ts but exists
+ * at runtime; TypeScript cannot see it on the subclass, hence the cast.
+ */
+class SkillHintEditor extends CustomEditor {
+	override handleInput(data: string): void {
+		super.handleInput(data);
+		if (this.isShowingAutocomplete()) return;
+		const { line, col } = this.getCursor();
+		if (extractSkillQuery(this.getLines(), line, col) === null) return;
+		// SAFETY: pi-tui declares tryTriggerAutocomplete() private but the method
+		// exists at runtime; the subclass only needs to invoke it as-is.
+		const editor = this as unknown as { tryTriggerAutocomplete(): void };
+		editor.tryTriggerAutocomplete();
+	}
+}
+
 export default function (pi: ExtensionAPI): void {
 	let registered = false;
 
@@ -104,5 +132,8 @@ export default function (pi: ExtensionAPI): void {
 		ctx.ui.addAutocompleteProvider((current) =>
 			createSkillHintProvider(current, () => pi.getCommands().filter((cmd) => cmd.source === "skill")),
 		);
+		if (ctx.mode === "tui") {
+			ctx.ui.setEditorComponent((tui, theme, keybindings) => new SkillHintEditor(tui, theme, keybindings));
+		}
 	});
 }
