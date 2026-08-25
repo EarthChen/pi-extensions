@@ -1,0 +1,34 @@
+{
+  "name": "@earthchen/pi-skill-hint",
+  "version": "0.0.2",
+  "description": "Mid-line '/' triggers /skill:* command suggestions in the pi editor.",
+  "main": null,
+  "types": null,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EarthChen/pi-extensions.git"
+  },
+  "files": [
+    "skill-hint.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "pi",
+    "pi-agent",
+    "pi-package",
+    "extension",
+    "autocomplete",
+    "skills"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./skill-hint.ts"
+    ]
+  },
+  "license": "MIT"
+}
