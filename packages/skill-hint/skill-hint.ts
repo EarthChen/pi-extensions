@@ -28,7 +28,9 @@ const MAX_SUGGESTIONS = 20;
  * Extract the query after a mid-line "/" token, or null when not in a skill-hint context.
  *
  * Rules:
- * - Line 0 starting with "/" is the built-in slash-command menu territory -> delegate.
+ * - On line 0, a "/" sitting at the very start of the message (first non-whitespace
+ *   char) is the built-in slash-command menu token -> delegate. Later "/" tokens on
+ *   such a line (e.g. after picking "/skill:name ") belong to us.
  * - The token must start with "/" preceded by line start or whitespace ("foo /ski" hits,
  *   "foo/ski" does not).
  * - A query containing another "/" looks like an absolute path ("/usr/local") -> delegate
@@ -36,12 +38,19 @@ const MAX_SUGGESTIONS = 20;
  */
 function extractSkillQuery(lines: string[], cursorLine: number, cursorCol: number): string | null {
 	const line = lines[cursorLine] ?? "";
-	if (cursorLine === 0 && line.startsWith("/")) {
-		return null;
-	}
 	const beforeCursor = line.slice(0, cursorCol);
 	const match = beforeCursor.match(/(?:^|[ \t])\/([^\s/]*)$/);
-	return match ? match[1] : null;
+	if (!match) {
+		return null;
+	}
+	if (cursorLine === 0) {
+		const firstNonWs = line.length - line.trimStart().length;
+		const slashIndex = match.index + match[0].lastIndexOf("/");
+		if (slashIndex <= firstNonWs) {
+			return null;
+		}
+	}
+	return match[1];
 }
 
 function createSkillHintProvider(
